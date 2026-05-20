@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybersecurity Authentication Analysis Dashboard</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Design System & Variables */
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #0f172a;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #06b6d4;
+      --primary-hover: #0891b2;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --border-color: #334155;
+      --border-focus: #06b6d4;
+      --transition-fast: 0.2s ease;
+      --transition-normal: 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand svg {
+      width: 2rem;
+      height: 2rem;
+      fill: var(--primary);
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #22d3ee, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: all var(--transition-fast);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-main);
+      background-color: var(--border-color);
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+    }
+
+    /* Sidebar / Navigation tabs */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all var(--transition-normal);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-btn::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--primary);
+      transform: scaleY(0);
+      transition: transform var(--transition-fast);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background-color: #243249;
+      transform: translateX(3px);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      background-color: #2e3f5b;
+      border-color: var(--primary);
+    }
+
+    .tab-btn.active::before {
+      transform: scaleY(1);
+    }
+
+    .tab-content {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2.5rem;
+      min-height: 500px;
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .content-header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+    }
+
+    .content-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .content-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Simulator Panel */
+    .simulator-strip {
+      background-color: #1a2333;
+      border: 1px dashed var(--primary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .simulator-label {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .simulator-btn {
+      background-color: var(--border-color);
+      color: var(--text-main);
+      border: 1px solid transparent;
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .simulator-btn:hover {
+      background-color: #475569;
+      transform: scale(1.03);
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, textarea {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all var(--transition-fast);
+      width: 100%;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+    }
+
+    .analyze-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, #0891b2 100%);
+      color: white;
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .analyze-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(6, 182, 212, 0.4);
+    }
+
+    .analyze-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Result Panel */
+    .result-section {
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 2rem;
+      display: none;
+    }
+
+    .result-section.active {
+      display: block;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1000px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+      }
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .result-card {
+      background-color: #131b2e;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      height: 100%;
+    }
+
+    .result-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .result-item {
+      margin-bottom: 1.25rem;
+    }
+
+    .result-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .result-val {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Vulnerability badges */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-low {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-medium {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--accent-yellow);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-high {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-normal {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-suspicious {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    pre {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      max-height: 350px;
+    }
+
+    /* Actions Table for Session Resolver */
+    .sessions-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+
+    .sessions-table th, .sessions-table td {
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .sessions-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .action-badge {
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .action-keep {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+    }
+
+    .action-terminate {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+    }
+
+    .action-suspend {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--accent-yellow);
+    }
+
+    /* Footer styling */
+    footer {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+      </svg>
+      <h1>Aegis Security Intelligence</h1>
+    </div>
+    <div class="nav-links">
+      <a href="login.html">Login Portal</a>
+      <a href="register.html">Register User</a>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    
+    <!-- Sidebar navigation -->
+    <aside class="sidebar">
+      <button class="tab-btn active" onclick="switchTab('risk_tab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Risk Classifier
+      </button>
+      <button class="tab-btn" onclick="switchTab('suspicious_tab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2L1.009 10l9.005 3 3 9.005L21 2z"></path></svg>
+        Suspicious Activity
+      </button>
+      <button class="tab-btn" onclick="switchTab('conflict_tab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Session Conflict
+      </button>
+      <button class="tab-btn" onclick="switchTab('summary_tab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Log Summarizer
+      </button>
+      <button class="tab-btn" onclick="switchTab('brute_tab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        Brute Force Detector
+      </button>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main>
+      
+      <!-- TAB 1: Risk Classifier -->
+      <section id="risk_tab" class="tab-content active">
+        <div class="content-header">
+          <h2>Login Risk Classifier</h2>
+          <p>Assess the security threat level of an individual authentication attempt based on location, device context, and historical failures.</p>
+        </div>
+
+        <div class="simulator-strip">
+          <span class="simulator-label">Simulations:</span>
+          <button class="simulator-btn" onclick="simulateRisk('safe')">Safe Login</button>
+          <button class="simulator-btn" onclick="simulateRisk('medium')">New Location & Devices</button>
+          <button class="simulator-btn" onclick="simulateRisk('unsafe')">Brute-Force & Unknown Location</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="risk_ip">IP Address</label>
+            <input type="text" id="risk_ip" placeholder="e.g. 192.168.1.50">
+          </div>
+          <div class="form-group">
+            <label for="risk_device">Device / User Agent</label>
+            <input type="text" id="risk_device" placeholder="e.g. Chrome / Windows 11">
+          </div>
+          <div class="form-group">
+            <label for="risk_location">Current Location</label>
+            <input type="text" id="risk_location" placeholder="e.g. Paris, France">
+          </div>
+          <div class="form-group">
+            <label for="risk_time">Time of Attempt</label>
+            <input type="text" id="risk_time" placeholder="e.g. 2026-05-20 22:30:00">
+          </div>
+          <div class="form-group">
+            <label for="risk_failures">Failed attempts (Last 10 min)</label>
+            <input type="number" id="risk_failures" value="0">
+          </div>
+          <div class="form-group">
+            <label for="risk_prev_locs">Previous Known Locations (Comma separated)</label>
+            <input type="text" id="risk_prev_locs" placeholder="e.g. Paris, France, Lyon, France">
+          </div>
+        </div>
+
+        <button id="btn_risk" class="analyze-btn" onclick="analyzeRisk()">
+          Analyze Risk Profile
+        </button>
+
+        <!-- Tab 1 Result -->
+        <div id="risk_results" class="result-section">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">Analysis Verdict</div>
+              
+              <div class="result-item">
+                <div class="result-label">Risk Classification</div>
+                <div id="res_risk_level" class="result-val"></div>
+              </div>
+              
+              <div class="result-item">
+                <div class="result-label">System Recommendation</div>
+                <div id="res_risk_rec" class="result-val"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Reasoning Details</div>
+                <div id="res_risk_reason" class="result-val" style="font-size: 0.95rem; color: var(--text-muted);"></div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">JSON Data Payload</div>
+              <pre><code id="json_risk"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Suspicious Activity Detector -->
+      <section id="suspicious_tab" class="tab-content">
+        <div class="content-header">
+          <h2>Suspicious Activity Detection</h2>
+          <p>Scan multi-event authentication logs to find impossible travel occurrences, session hijack attempts, and erratic device switching.</p>
+        </div>
+
+        <div class="simulator-strip">
+          <span class="simulator-label">Simulations:</span>
+          <button class="simulator-btn" onclick="simulateSuspicious('normal')">Clean Activity logs</button>
+          <button class="simulator-btn" onclick="simulateSuspicious('impossible_travel')">Impossible Travel Scan</button>
+          <button class="simulator-btn" onclick="simulateSuspicious('session_hijack')">Session Hijacking Scan</button>
+        </div>
+
+        <div class="form-group full-width" style="margin-bottom: 2rem;">
+          <label for="suspicious_logs">Authentication Event Logs</label>
+          <textarea id="suspicious_logs" placeholder="Enter logs (JSON list format or raw text)..."></textarea>
+        </div>
+
+        <button id="btn_suspicious" class="analyze-btn" onclick="analyzeSuspicious()">
+          Scan Activity Logs
+        </button>
+
+        <!-- Tab 2 Result -->
+        <div id="suspicious_results" class="result-section">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">Threat Assessment</div>
+              
+              <div class="result-item">
+                <div class="result-label">Status</div>
+                <div id="res_suspicious_status" class="result-val"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Identified Threat Activity</div>
+                <div id="res_suspicious_explain" class="result-val" style="font-size: 0.95rem; color: var(--text-muted);"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Countermeasures Suggestion</div>
+                <div id="res_suspicious_suggest" class="result-val" style="color: var(--primary); font-size: 0.95rem; font-weight: 500;"></div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">JSON Data Payload</div>
+              <pre><code id="json_suspicious"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Session Conflict Resolver -->
+      <section id="conflict_tab" class="tab-content">
+        <div class="content-header">
+          <h2>Session Conflict Resolver</h2>
+          <p>Manage concurrent user sessions. Audit and terminate older or geographically conflicting browser logins to enforce security.</p>
+        </div>
+
+        <div class="simulator-strip">
+          <span class="simulator-label">Simulations:</span>
+          <button class="simulator-btn" onclick="simulateConflict('clean')">Single Session</button>
+          <button class="simulator-btn" onclick="simulateConflict('limit_exceeded')">Exceeded Session Limits</button>
+          <button class="simulator-btn" onclick="simulateConflict('impossible_travel')">Geographical Conflict</button>
+        </div>
+
+        <div class="form-group full-width" style="margin-bottom: 2rem;">
+          <label for="conflict_sessions">Active User Sessions</label>
+          <textarea id="conflict_sessions" placeholder="Enter session records..."></textarea>
+        </div>
+
+        <button id="btn_conflict" class="analyze-btn" onclick="analyzeConflict()">
+          Audit Active Sessions
+        </button>
+
+        <!-- Tab 3 Result -->
+        <div id="conflict_results" class="result-section">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">Session Resolution Actions</div>
+              
+              <div class="result-item">
+                <div class="result-label">System Decision</div>
+                <div id="res_conflict_decision" class="result-val"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Reasoning</div>
+                <div id="res_conflict_reason" class="result-val" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem;"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Actions Executed per Session</div>
+                <table class="sessions-table">
+                  <thead>
+                    <tr>
+                      <th>Session ID</th>
+                      <th>Resolution Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="res_conflict_actions_table">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">JSON Data Payload</div>
+              <pre><code id="json_conflict"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Log Summarizer -->
+      <section id="summary_tab" class="tab-content">
+        <div class="content-header">
+          <h2>Authentication Log Summarizer</h2>
+          <p>Condense raw authentication events into clear analytical metrics and extract action-oriented insights for security administration.</p>
+        </div>
+
+        <div class="simulator-strip">
+          <span class="simulator-label">Simulations:</span>
+          <button class="simulator-btn" onclick="simulateSummary('normal')">Standard Login Logs</button>
+          <button class="simulator-btn" onclick="simulateSummary('heavy_failures')">Failed Scanning Attempt Logs</button>
+        </div>
+
+        <div class="form-group full-width" style="margin-bottom: 2rem;">
+          <label for="summary_logs">System Access Logs</label>
+          <textarea id="summary_logs" placeholder="Enter logs..."></textarea>
+        </div>
+
+        <button id="btn_summary" class="analyze-btn" onclick="analyzeSummary()">
+          Summarize Audit Logs
+        </button>
+
+        <!-- Tab 4 Result -->
+        <div id="summary_results" class="result-section">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">Executive Summary</div>
+              
+              <div class="result-item">
+                <div class="result-label">Summary Overview</div>
+                <div id="res_summary_overview" class="result-val" style="font-size: 1rem; font-weight: 500;"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Suspicious Event Patterns</div>
+                <div id="res_summary_patterns" class="result-val" style="font-size: 0.95rem; color: var(--accent-yellow);"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Admin Security Recommendations</div>
+                <div id="res_summary_insights" class="result-val" style="font-size: 0.95rem; color: var(--text-muted);"></div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">JSON Data Payload</div>
+              <pre><code id="json_summary"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Brute Force Detector -->
+      <section id="brute_tab" class="tab-content">
+        <div class="content-header">
+          <h2>Brute-Force Attack Detection</h2>
+          <p>Scan rapid repeated failures, credential stuffing sweeps, and suspect client IP addresses to guard against automated attacks.</p>
+        </div>
+
+        <div class="simulator-strip">
+          <span class="simulator-label">Simulations:</span>
+          <button class="simulator-btn" onclick="simulateBrute('normal')">Normal Logins</button>
+          <button class="simulator-btn" onclick="simulateBrute('attack')">Credential Stuffing Attack</button>
+          <button class="simulator-btn" onclick="simulateBrute('rapid_fail')">Single IP Brute Force</button>
+        </div>
+
+        <div class="form-group full-width" style="margin-bottom: 2rem;">
+          <label for="brute_attempts">Login Attempts Records</label>
+          <textarea id="brute_attempts" placeholder="Enter login attempt lists..."></textarea>
+        </div>
+
+        <button id="btn_brute" class="analyze-btn" onclick="analyzeBrute()">
+          Perform Brute Force Audit
+        </button>
+
+        <!-- Tab 5 Result -->
+        <div id="brute_results" class="result-section">
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">Analysis Verdict</div>
+              
+              <div class="result-item">
+                <div class="result-label">Brute-Force Attack Detected?</div>
+                <div id="res_brute_detected" class="result-val"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">Detection Confidence</div>
+                <div id="res_brute_confidence" class="result-val"></div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">System Recommended Countermeasure</div>
+                <div id="res_brute_action" class="result-val" style="color: var(--accent-red); font-size: 1.1rem; font-weight: 700;"></div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">JSON Data Payload</div>
+              <pre><code id="json_brute"></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Aegis Security Suite. Designed for premium authentication threat analysis.</p>
+  </footer>
+
+  <script>
+    // Global API URL
+    const API_URL = "http://127.0.0.1:8000/security/";
+
+    // Switch Tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(tabId).classList.add('active');
+      // Set active button
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => {
+        if (btn.outerHTML.includes(tabId)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Call API Helper
+    async function makeApiCall(task, data) {
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ task, data })
+        });
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        return await response.json();
+      } catch (err) {
+        alert("API Connection Error: Make sure your Django server is running locally on http://127.0.0.1:8000!");
+        console.error(err);
+        return null;
+      }
+    }
+
+    // SIMULATORS & HANDLERS
+
+    // TAB 1: Risk Classifier
+    function simulateRisk(preset) {
+      if (preset === 'safe') {
+        document.getElementById('risk_ip').value = "192.168.1.15";
+        document.getElementById('risk_device').value = "MacBook Pro / Chrome 124";
+        document.getElementById('risk_location').value = "New York, USA";
+        document.getElementById('risk_time').value = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        document.getElementById('risk_failures').value = 0;
+        document.getElementById('risk_prev_locs').value = "New York, USA, Boston, USA";
+      } else if (preset === 'medium') {
+        document.getElementById('risk_ip').value = "172.56.21.90";
+        document.getElementById('risk_device').value = "iPhone 15 / Safari Mobile";
+        document.getElementById('risk_location').value = "Chicago, USA";
+        document.getElementById('risk_time').value = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        document.getElementById('risk_failures').value = 2;
+        document.getElementById('risk_prev_locs').value = "New York, USA, Boston, USA";
+      } else if (preset === 'unsafe') {
+        document.getElementById('risk_ip').value = "185.220.101.5";
+        document.getElementById('risk_device').value = "Python-urllib/3.10";
+        document.getElementById('risk_location').value = "Moscow, Russia";
+        document.getElementById('risk_time').value = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        document.getElementById('risk_failures').value = 6;
+        document.getElementById('risk_prev_locs').value = "New York, USA, Boston, USA";
+      }
+    }
+
+    async function analyzeRisk() {
+      const data = {
+        ip: document.getElementById('risk_ip').value,
+        device: document.getElementById('risk_device').value,
+        location: document.getElementById('risk_location').value,
+        time: document.getElementById('risk_time').value,
+        failed_attempts: document.getElementById('risk_failures').value,
+        previous_locations: document.getElementById('risk_prev_locs').value
+      };
+      
+      const result = await makeApiCall("risk_classifier", data);
+      if (!result) return;
+
+      document.getElementById('json_risk').textContent = JSON.stringify(result, null, 2);
+      
+      // Update Verdict UI
+      const riskEl = document.getElementById('res_risk_level');
+      riskEl.textContent = result.risk_level;
+      riskEl.className = "result-val badge " + (
+        result.risk_level === 'High' ? 'badge-high' : 
+        result.risk_level === 'Medium' ? 'badge-medium' : 'badge-low'
+      );
+
+      const recEl = document.getElementById('res_risk_rec');
+      recEl.textContent = result.recommendation;
+      recEl.style.color = result.recommendation === 'Block' ? 'var(--accent-red)' : 
+                          result.recommendation === 'Challenge with OTP' ? 'var(--accent-yellow)' : 'var(--accent-green)';
+
+      document.getElementById('res_risk_reason').textContent = result.reason;
+      document.getElementById('risk_results').classList.add('active');
+    }
+
+    // TAB 2: Suspicious Activity Detector
+    function simulateSuspicious(preset) {
+      if (preset === 'normal') {
+        const logs = [
+          { timestamp: "2026-05-20 22:00:00", ip: "192.168.1.15", username: "alice", location: "New York, USA", device: "Chrome/Mac", action: "Login Success" },
+          { timestamp: "2026-05-20 22:05:00", ip: "192.168.1.15", username: "alice", location: "New York, USA", device: "Chrome/Mac", action: "View Dashboard" }
+        ];
+        document.getElementById('suspicious_logs').value = JSON.stringify(logs, null, 2);
+      } else if (preset === 'impossible_travel') {
+        const logs = [
+          { timestamp: "2026-05-20 22:00:00", ip: "192.168.1.15", username: "bob", location: "New York, USA", device: "Chrome/Mac", action: "Login Success" },
+          { timestamp: "2026-05-20 22:15:00", ip: "89.207.132.5", username: "bob", location: "Tokyo, Japan", device: "Firefox/Linux", action: "Login Success" }
+        ];
+        document.getElementById('suspicious_logs').value = JSON.stringify(logs, null, 2);
+      } else if (preset === 'session_hijack') {
+        const logs = [
+          { timestamp: "2026-05-20 22:00:00", ip: "192.168.1.15", username: "charlie", location: "New York, USA", device: "Chrome/Mac", action: "Login Success" },
+          { timestamp: "2026-05-20 22:00:45", ip: "203.0.113.80", username: "charlie", location: "New York, USA", device: "Safari/iOS", action: "Login Success" }
+        ];
+        document.getElementById('suspicious_logs').value = JSON.stringify(logs, null, 2);
+      }
+    }
+
+    async function analyzeSuspicious() {
+      const logsRaw = document.getElementById('suspicious_logs').value;
+      let logsParsed = logsRaw;
+      try {
+        logsParsed = JSON.parse(logsRaw);
+      } catch (e) {
+        // Fallback to sending raw string
+      }
+
+      const result = await makeApiCall("suspicious_activity", { logs: logsParsed });
+      if (!result) return;
+
+      document.getElementById('json_suspicious').textContent = JSON.stringify(result, null, 2);
+      
+      const statusEl = document.getElementById('res_suspicious_status');
+      statusEl.textContent = result.status;
+      statusEl.className = "result-val badge " + (
+        result.status === 'Suspicious' ? 'badge-suspicious' : 'badge-normal'
+      );
+
+      document.getElementById('res_suspicious_explain').textContent = result.explanation;
+      document.getElementById('res_suspicious_suggest').textContent = result.suggestion;
+
+      document.getElementById('suspicious_results').classList.add('active');
+    }
+
+    // TAB 3: Session Conflict Resolver
+    function simulateConflict(preset) {
+      if (preset === 'clean') {
+        const sessions = [
+          { session_id: "sess_001", ip: "192.168.1.15", location: "New York, USA", device: "MacBook Pro / Chrome", last_active: "2026-05-20 22:30:00" }
+        ];
+        document.getElementById('conflict_sessions').value = JSON.stringify(sessions, null, 2);
+      } else if (preset === 'limit_exceeded') {
+        const sessions = [
+          { session_id: "sess_001", ip: "192.168.1.15", location: "New York, USA", device: "MacBook Pro / Chrome", last_active: "2026-05-20 22:00:00" },
+          { session_id: "sess_002", ip: "192.168.1.15", location: "New York, USA", device: "iPhone 15 / Safari", last_active: "2026-05-20 22:25:00" },
+          { session_id: "sess_003", ip: "192.168.1.15", location: "New York, USA", device: "iPad / Safari", last_active: "2026-05-20 22:35:00" }
+        ];
+        document.getElementById('conflict_sessions').value = JSON.stringify(sessions, null, 2);
+      } else if (preset === 'impossible_travel') {
+        const sessions = [
+          { session_id: "sess_001", ip: "192.168.1.15", location: "New York, USA", device: "MacBook Pro / Chrome", last_active: "2026-05-20 22:35:00" },
+          { session_id: "sess_002", ip: "185.112.144.10", location: "Berlin, Germany", device: "Ubuntu / Firefox", last_active: "2026-05-20 22:36:00" }
+        ];
+        document.getElementById('conflict_sessions').value = JSON.stringify(sessions, null, 2);
+      }
+    }
+
+    async function analyzeConflict() {
+      const sessRaw = document.getElementById('conflict_sessions').value;
+      let sessParsed = sessRaw;
+      try {
+        sessParsed = JSON.parse(sessRaw);
+      } catch (e) {
+        // Fallback
+      }
+
+      const result = await makeApiCall("session_conflict", { sessions: sessParsed });
+      if (!result) return;
+
+      document.getElementById('json_conflict').textContent = JSON.stringify(result, null, 2);
+      
+      const decisionEl = document.getElementById('res_conflict_decision');
+      decisionEl.textContent = result.decision;
+      decisionEl.style.color = result.decision.includes("conflict") ? 'var(--accent-red)' : 
+                               result.decision.includes("Terminate") ? 'var(--accent-yellow)' : 'var(--accent-green)';
+      
+      document.getElementById('res_conflict_reason').textContent = result.reason;
+
+      // Populate Table
+      const tableBody = document.getElementById('res_conflict_actions_table');
+      tableBody.innerHTML = '';
+      
+      if (result.actions) {
+        for (const [sid, action] of Object.entries(result.actions)) {
+          const row = document.createElement('tr');
+          const tdId = document.createElement('td');
+          tdId.textContent = sid;
+          const tdAct = document.createElement('td');
+          
+          const badge = document.createElement('span');
+          badge.textContent = action;
+          badge.className = "action-badge " + (
+            action === 'Keep' ? 'action-keep' :
+            action === 'Terminate' ? 'action-terminate' : 'action-suspend'
+          );
+          
+          tdAct.appendChild(badge);
+          row.appendChild(tdId);
+          row.appendChild(tdAct);
+          tableBody.appendChild(row);
+        }
+      }
+
+      document.getElementById('conflict_results').classList.add('active');
+    }
+
+    // TAB 4: Log Summarizer
+    function simulateSummary(preset) {
+      if (preset === 'normal') {
+        const logs = [
+          { ip: "192.168.1.15", username: "alice", location: "New York, USA", action: "Login Success" },
+          { ip: "192.168.1.15", username: "alice", location: "New York, USA", action: "Login Success" },
+          { ip: "10.0.0.8", username: "bob", location: "San Francisco, USA", action: "Login Success" }
+        ];
+        document.getElementById('summary_logs').value = JSON.stringify(logs, null, 2);
+      } else if (preset === 'heavy_failures') {
+        const logs = [
+          { ip: "192.168.1.150", username: "admin", location: "Chicago, USA", action: "Login Failed" },
+          { ip: "192.168.1.150", username: "admin", location: "Chicago, USA", action: "Login Failed" },
+          { ip: "192.168.1.150", username: "admin", location: "Chicago, USA", action: "Login Failed" },
+          { ip: "192.168.1.150", username: "guest", location: "Chicago, USA", action: "Login Failed" },
+          { ip: "192.168.1.150", username: "user1", location: "Chicago, USA", action: "Login Failed" },
+          { ip: "10.0.0.8", username: "bob", location: "San Francisco, USA", action: "Login Success" }
+        ];
+        document.getElementById('summary_logs').value = JSON.stringify(logs, null, 2);
+      }
+    }
+
+    async function analyzeSummary() {
+      const logsRaw = document.getElementById('summary_logs').value;
+      let logsParsed = logsRaw;
+      try {
+        logsParsed = JSON.parse(logsRaw);
+      } catch (e) {
+        // Fallback
+      }
+
+      const result = await makeApiCall("log_summarizer", { logs: logsParsed });
+      if (!result) return;
+
+      document.getElementById('json_summary').textContent = JSON.stringify(result, null, 2);
+      
+      document.getElementById('res_summary_overview').textContent = result.summary;
+      document.getElementById('res_summary_patterns').textContent = result.suspicious_patterns;
+      document.getElementById('res_summary_insights').textContent = result.insights;
+
+      document.getElementById('summary_results').classList.add('active');
+    }
+
+    // TAB 5: Brute Force Detector
+    function simulateBrute(preset) {
+      if (preset === 'normal') {
+        const attempts = [
+          { ip: "192.168.1.15", username: "alice", status: "Success" },
+          { ip: "10.0.0.5", username: "bob", status: "Success" }
+        ];
+        document.getElementById('brute_attempts').value = JSON.stringify(attempts, null, 2);
+      } else if (preset === 'attack') {
+        const attempts = [
+          { ip: "198.51.100.42", username: "alex", status: "Fail" },
+          { ip: "198.51.100.42", username: "becky", status: "Fail" },
+          { ip: "198.51.100.42", username: "carlos", status: "Fail" },
+          { ip: "198.51.100.42", username: "denise", status: "Fail" }
+        ];
+        document.getElementById('brute_attempts').value = JSON.stringify(attempts, null, 2);
+      } else if (preset === 'rapid_fail') {
+        const attempts = [
+          { ip: "203.0.113.111", username: "admin", status: "Fail" },
+          { ip: "203.0.113.111", username: "admin", status: "Fail" },
+          { ip: "203.0.113.111", username: "admin", status: "Fail" },
+          { ip: "203.0.113.111", username: "admin", status: "Fail" },
+          { ip: "203.0.113.111", username: "admin", status: "Fail" }
+        ];
+        document.getElementById('brute_attempts').value = JSON.stringify(attempts, null, 2);
+      }
+    }
+
+    async function analyzeBrute() {
+      const attRaw = document.getElementById('brute_attempts').value;
+      let attParsed = attRaw;
+      try {
+        attParsed = JSON.parse(attRaw);
+      } catch (e) {
+        // Fallback
+      }
+
+      const result = await makeApiCall("brute_force", { login_attempts: attParsed });
+      if (!result) return;
+
+      document.getElementById('json_brute').textContent = JSON.stringify(result, null, 2);
+      
+      const detectEl = document.getElementById('res_brute_detected');
+      detectEl.textContent = result.attack_detected;
+      detectEl.className = "result-val badge " + (
+        result.attack_detected === 'Yes' ? 'badge-high' : 'badge-low'
+      );
+
+      const confEl = document.getElementById('res_brute_confidence');
+      confEl.textContent = result.confidence_level;
+      confEl.className = "result-val badge " + (
+        result.confidence_level === 'High' ? 'badge-high' :
+        result.confidence_level === 'Medium' ? 'badge-medium' : 'badge-low'
+      );
+
+      document.getElementById('res_brute_action').textContent = result.recommended_action;
+
+      document.getElementById('brute_results').classList.add('active');
+    }
+
+    // Auto load first tab simulations on page load
+    window.onload = function() {
+      simulateRisk('safe');
+      simulateSuspicious('normal');
+      simulateConflict('clean');
+      simulateSummary('normal');
+      simulateBrute('normal');
+    }
+  </script>
+</body>
+</html>

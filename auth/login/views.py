@@ -45,4 +45,51 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+class SecurityAnalysisView(APIView):
+    def post(self, request):
+        task = request.data.get("task")
+        payload = request.data.get("data", {})
+
+        if not task:
+            return Response({"error": "Task parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .security_engine import SecurityEngine
+
+        try:
+            if task == "risk_classifier":
+                ip = payload.get("ip", "")
+                device = payload.get("device", "")
+                location = payload.get("location", "")
+                time = payload.get("time", "")
+                failed_attempts = payload.get("failed_attempts", 0)
+                previous_locations = payload.get("previous_locations", [])
+                
+                result = SecurityEngine.classify_risk(ip, device, location, time, failed_attempts, previous_locations)
+                return Response(result, status=status.HTTP_200_OK)
+
+            elif task == "suspicious_activity":
+                logs = payload.get("logs", "")
+                result = SecurityEngine.detect_suspicious_activity(logs)
+                return Response(result, status=status.HTTP_200_OK)
+
+            elif task == "session_conflict":
+                sessions = payload.get("sessions", "")
+                result = SecurityEngine.resolve_session_conflict(sessions)
+                return Response(result, status=status.HTTP_200_OK)
+
+            elif task == "log_summarizer":
+                logs = payload.get("logs", "")
+                result = SecurityEngine.summarize_auth_logs(logs)
+                return Response(result, status=status.HTTP_200_OK)
+
+            elif task == "brute_force":
+                login_attempts = payload.get("login_attempts", "")
+                result = SecurityEngine.detect_brute_force(login_attempts)
+                return Response(result, status=status.HTTP_200_OK)
+
+            else:
+                return Response({"error": f"Unknown task: {task}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
