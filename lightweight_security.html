@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lightweight Security Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; }
+    select, textarea, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    button { background: #0069d9; color: #fff; border: none; cursor: pointer; }
+    button:hover { background: #0053aa; }
+    pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Security Analyzer (Lightweight)</h1>
+    <label for="task">Select analysis type:</label>
+    <select id="task">
+      <option value="risk_classification">Risk Classification</option>
+      <option value="suspicious_activity">Suspicious Activity Detection</option>
+      <option value="session_conflict">Session Conflict Resolver</option>
+      <option value="log_summarizer">Log Summarizer</option>
+      <option value="brute_force">Brute‑Force Detector</option>
+    </select>
+
+    <label for="payload">JSON payload (adjust as needed):</label>
+    <textarea id="payload" rows="12">{
+  "type": "risk_classification",
+  "data": {
+    "ip": "192.168.1.15",
+    "device": "Chrome Windows",
+    "location": "New York, USA",
+    "time": "2026-05-20T22:30:00",
+    "failed_attempts": 0,
+    "previous_locations": ["New York, USA", "Boston, USA"]
+  }
+}</textarea>
+
+    <button onclick="runAnalysis()">Run Analysis</button>
+    <h3>Result:</h3>
+    <pre id="result">-</pre>
+  </div>
+
+  <script>
+    async function runAnalysis() {
+      const task = document.getElementById('task').value;
+      const raw = document.getElementById('payload').value;
+      let payload;
+      try { payload = JSON.parse(raw); }
+      catch(e) { document.getElementById('result').textContent = 'Invalid JSON: ' + e; return; }
+      // Ensure the selected type matches the payload "type"
+      payload.type = task;
+      try {
+        const resp = await fetch('http://127.0.0.1:8000/security/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('result').textContent = 'Error contacting server: ' + err;
+      }
+    }
+  </script>
+</body>
+</html>
